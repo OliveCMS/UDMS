@@ -2,7 +2,7 @@
   "name": "olive-cms/udms",
   "description": "Universal data manager System",
   "type": "library",
-  "keywords": ["Data", "Database", "Data manager", "UDMS", "Sql", "NoSQL", "mysql", "mongodb", "json", "datahub", "composer"],
+  "keywords": ["Data", "Database", "Data manager", "UDMS", "Sql", "NoSQL", "mysql", "mongodb", "json", "datahub", "composer", "OliveCMS"],
   "require": {
     "php": ">=5.5",
     "mongodb/mongodb": "^1.4",
