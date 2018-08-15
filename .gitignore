@@ -1,0 +1,8 @@
+desktop.ini
+todo.txt
+error_logs
+test.php
+composer.phar
+composer.lock
+vendor/
+database*/

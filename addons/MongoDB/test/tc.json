@@ -1,0 +1,4 @@
+{
+  "type": "mongodb",
+  "host": "localhost:27017"
+}

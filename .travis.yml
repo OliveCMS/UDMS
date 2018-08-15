@@ -1,0 +1,24 @@
+language: php
+dist: trusty
+php:
+  - 5.5
+  - 5.6
+  - 7.0
+  - 7.1
+  - 7.2
+
+services:
+  - mysql
+  - mongodb
+
+before_script:
+  - pecl install mongodb
+  - composer install
+
+script:
+  - chmod +x ./test/bash.sh
+  - chmod +x ./test/src/bexe.sh
+  - chmod +x ./test/src/lexe.sh
+  - export IS_TRAVIS_CI=dev
+  - cd test
+  - ./bash.sh -y
