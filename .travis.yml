@@ -12,7 +12,7 @@ services:
   - mongodb
 
 before_script:
-  - [[ "$TRAVIS_PHP_VERSION" == "7.2" ]] || pecl install mongodb
+  - if [[ "$TRAVIS_PHP_VERSION" != "7.2" ]]; then echo "test"; fi
   - composer install
 
 script:
