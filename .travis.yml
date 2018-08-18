@@ -17,4 +17,4 @@ before_script:
 
 script:
   - chmod +x ./test/run
-  - ./run -y
+  - ./test/run -y
