@@ -5,4 +5,5 @@ test.php
 composer.phar
 composer.lock
 vendor/
+debugc/
 database*/

@@ -1,10 +1,10 @@
 <?php
 namespace Olive\UDMS\Addon\MySQL;
 
-use PDO;
 use Olive\UDMS\Common as Common;
-use Olive\UDMS\Model\Addon as Addon;
 use Olive\UDMS\Exception\Custom as UException;
+use Olive\UDMS\Model\Addon as Addon;
+use PDO;
 class Point implements Addon
 {
     use Common;
@@ -80,7 +80,7 @@ class Point implements Addon
 
     public function renameDatabase($name, $to)
     {
-        $ui = $this->getDatabaseModel($name);
+        $ui = $this->getCore->getDatabaseModel($name);
         $tables = array_keys($ui);
         if (! isset($ui['__udms_config'])) {
             $ui['__udms_config'] = [];
@@ -165,12 +165,12 @@ class Point implements Addon
         $this->set_database($db);
         $cm_detect = false;
         $rel_detect = false;
-        $ui = $this->getDatabaseModel($db);
+        $ui = $this->getCore->getDatabaseModel($this->getCore->od);
         if (isset($options['__udms_rel'])) {
             $d = $options['__udms_rel'];
             $e = key($d);
             $c = $d[$e];
-            $options = $ui[$e][$c];
+            $options = $ui[$this->getCore->ot][$c];
             $rel_detect = true;
         }
         if (isset($options['__udms_config']['mysql_' . $this->type])) {
@@ -180,8 +180,7 @@ class Point implements Addon
         if (! isset($options['type'])) {
             $options['type'] = 'text';
         }
-        $ln = ['VARCHAR', 'CHAR', 'BIT', 'VARBINARY', 'BINARY'];
-        if (! isset($options['length']) and in_array(strtoupper($options['type']), $ln)) {
+        if ((isset($options['length']) and $options['length'] == '') or (! isset($options['length']) and in_array(strtoupper($options['type']), ['VARCHAR', 'CHAR', 'BIT', 'VARBINARY', 'BINARY']))) {
             $options['length'] = 1;
         }
         $query = 'ALTER TABLE `' . $table . '` ADD `' . $name . '` ' . $options['type'];
@@ -198,7 +197,7 @@ class Point implements Addon
                 if ($rel_detect != true and ((isset($ci['primary']) and ! $ci['primary']) or ! isset($ci['primary']))) {
                     $query = $query . ' NULL';
                 } else {
-                    $this->addLog('col select primary key, so can not null!', __FILE__, __LINE__);
+                    $this->getCore->addLog('col select primary key, so can not null!', __FILE__, __LINE__);
                 }
             }
         }
@@ -255,7 +254,7 @@ class Point implements Addon
     public function insert($db, $table, $data)
     {
         $this->set_database($db);
-        $ui = $this->getDatabaseModel($db);
+        $ui = $this->getCore->getDatabaseModel($db);
         foreach ($data as $col => $value) {
             if ($col == '__udms_id') {
                 $data[$col] = '\'' . $value . '\'';
@@ -278,7 +277,7 @@ class Point implements Addon
     public function update($db, $table, $uid, $data)
     {
         $this->set_database($db);
-        $ui = $this->getDatabaseModel($db);
+        $ui = $this->getCore->getDatabaseModel($db);
         $do = [];
         foreach ($data as $col => $value) {
             if ($col == '__udms_id') {
@@ -325,10 +324,9 @@ class Point implements Addon
         }
     }
 
-    public function __construct($path, $udmsCacheDir, $option = [])
+    public function __construct($point, $option = [])
     {
-        $this->setPath($path);
-        $this->setUCPath($udmsCacheDir);
+        $this->getCore = $point;
         if (! isset($option['charset'])) {
             $option['charset'] = 'utf8mb4';
         }
@@ -347,7 +345,7 @@ class Point implements Addon
             $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
         } catch (Excepstion $e) {
-            throw new UException($this->getUCPath(), 'Can not connect PDO to mysql.');
+            throw new UException($this->getCore->getUCPath(), 'Can not connect PDO to mysql.', 300);
         }
         $this->service = $db;
         $this->type = $option['type'];

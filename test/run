@@ -1,0 +1,265 @@
+#!/usr/bin/env php
+<?php
+
+$path = realpath(dirname(__FILE__) . '/../') . '/';
+$udmsCacheDir = $path . 'test/database';
+require_once $path . 'vendor/autoload.php';
+
+use Olive\Tools;
+use Olive\Tools\ColorConsole as C;
+use Olive\UDMS\Core as udms;
+
+function banner($msg, $style = [])
+{
+    if (! isset($style['color'])) {
+        $style['color'] = 'cyan';
+    }
+    $mt = explode(' ', microtime());
+    echo C::render('[' . date('Y-m-d:H:i:s', $mt[1]) . '.' . str_replace('0.', '', $mt[0]) . '] ');
+    echo C::render($msg, $style) . PHP_EOL;
+}
+
+function exitcode($code)
+{
+    banner('exit code: ' . $code, ['color' => 'red']);
+    exit($code);
+}
+
+$accept = 'n';
+$caccept = false;
+if (isset($argv)) {
+    if (isset($argv[1]) and $argv[1] == '-y') {
+        $caccept = true;
+        $accept = 'y';
+    }
+} else {
+    echo 'UDMS test case run only in terminal' . PHP_EOL;
+    die();
+}
+if ($caccept == false and $accept == 'n') {
+    echo C::render('Warning!! when run this test, remove ', ['color' => 'red']);
+    echo C::render($udmsCacheDir, ['color' => 'white', 'background' => 'red']);
+    echo C::render(' dir!', ['color' => 'red']) . PHP_EOL;
+    echo C::render('Are you ready for continue? (y/n): ', ['color' => 'yellow']);
+    $accept = readline();
+}
+if ($accept == 'n') {
+    echo C::render('exit') . PHP_EOL;
+    exit(1);
+}
+
+banner('#1 removeing all data...');
+Tools::rmDir($udmsCacheDir);
+if (is_dir($udmsCacheDir)) {
+    banner('failed remove data!!');
+    exitcode('1');
+}
+banner('removed all data');
+
+$udms = new udms($udmsCacheDir);
+
+$dms = $udms->getAddonsList();
+banner('found (' . count($dms) . ') data manager');
+
+include $path . 'test/src/simpleAppDatabaseModel.php';
+
+banner('#2 starting udms test...');
+
+$i = 1;
+$ft = 0;
+$fat = 0;
+foreach ($dms as $dm) {
+    banner('#' . ($i + 2) . ' starting ' . $dm . ' addon test...', ['background' => 'magenta', 'color' => 'white']);
+    for ($d2t = 0;$d2t < 2;$d2t++) {
+        $start_micro = explode(' ', microtime());
+        $start_micro = $start_micro[1] . '.' . str_replace('0.', '', $start_micro[0]);
+
+        $udms->setAddon($dm, Tools::getJsonFile($udms->getPath('addons/' . $dm . '/test/tc.json')));
+        if ($d2t == 1) {
+            banner('starting D2T Mode database service test...', ['color' => 'magenta']);
+            $udms->createDatabase('d2tdb');
+            $udms->setD2TMode('d2tdb');
+        } else {
+            banner('starting database service test...', ['color' => 'magenta']);
+        }
+
+        banner('create "udms_testdb" database...');
+        $udms->createDatabase('udms_testdb');
+        if ($udms->existsDatabase('udms_testdb') == true) {
+            banner('create "udms_testdb" database seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('create "udms_testdb" database failed', ['color' => 'red']);
+            exitcode('2');
+        }
+
+        banner('getting databases list...');
+        $dl = $udms->listDatabases();
+        if (in_array('udms_testdb', $dl)) {
+            banner('getting databases list seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('getting databases list failed', ['color' => 'red']);
+            exitcode('11');
+        }
+
+        banner('rename "udms_testdb" database to "udms_testdb2"...');
+        $udms->renameDatabase('udms_testdb', 'udms_testdb2');
+        if ($udms->existsDatabase('udms_testdb2') == true) {
+            banner('rename "udms_testdb" database to "udms_testdb2" seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('rename "udms_testdb" database to "udms_testdb2 failed', ['color' => 'red']);
+            exitcode('3');
+        }
+
+        banner('droping "udms_testdb2" database...');
+        $udms->dropDatabase('udms_testdb2');
+        if ($udms->existsDatabase('udms_testdb2') == false) {
+            banner('droping "udms_testdb2" database seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('droping "udms_testdb2" database failed', ['color' => 'red']);
+            exitcode('4');
+        }
+
+        banner('database service testing done.');
+
+        banner('starting table service over "udms_testdb" database test...');
+        $udms->createDatabase('udms_testdb');
+
+        banner('create "udms_testtable" table...');
+        $udms->udms_testdb->createTable('udms_testtable');
+        if ($udms->udms_testdb->existsTable('udms_testtable') == true) {
+            banner('create "udms_testtable" table seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('create "udms_testtable" table failed', ['color' => 'red']);
+            exitcode('5');
+        }
+
+        banner('getting tables list...');
+        $tl = $udms->udms_testdb->listTables();
+        if (in_array('udms_testtable', $tl)) {
+            banner('getting tables list seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('getting tables list failed', ['color' => 'red']);
+            exitcode('12');
+        }
+
+        banner('rename "udms_testtable" table to "udms_testtable2"...');
+        $udms->udms_testdb->renameTable('udms_testtable', 'udms_testtable2');
+        if ($udms->udms_testdb->existsTable('udms_testtable2') == true) {
+            banner('rename "udms_testtable" table to "udms_testtable2" seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('rename "udms_testtable" table to "udms_testtable2 failed', ['color' => 'red']);
+            exitcode('6');
+        }
+
+        banner('droping "udms_testtable2" table...');
+        $udms->udms_testdb->dropTable('udms_testtable2');
+        if ($udms->udms_testdb->existsTable('udms_testtable2') == false) {
+            banner('droping "udms_testtable2" table seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('droping "udms_testtable2" table failed', ['color' => 'red']);
+            exitcode('7');
+        }
+
+        banner('table service over "udms_testdb" database testing done.');
+
+        banner('starting column service over "udms_testtable" table on "udms_testdb" database test...');
+
+        $udms->udms_testdb->createTable('udms_testtable');
+
+        banner('create "udms_testcol" column...');
+        $udms->udms_testdb->udms_testtable->createColumn('udms_testcol', ['type' => 'int']);
+        if ($udms->udms_testdb->udms_testtable->existsColumn('udms_testcol') == true) {
+            banner('create "udms_testcol" column seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('create "udms_testcol" column failed', ['color' => 'red']);
+            exitcode('5');
+        }
+
+        banner('getting column list...');
+        $cl = $udms->udms_testdb->udms_testtable->listColumns();
+        if (in_array('udms_testcol', $cl)) {
+            banner('getting column list seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('getting column list failed', ['color' => 'red']);
+            exitcode('13');
+        }
+
+        banner('droping "udms_testcol" column...');
+        $udms->udms_testdb->udms_testtable->dropColumn('udms_testcol');
+        if ($udms->udms_testdb->udms_testtable->existsColumn('udms_testcol') == false) {
+            banner('droping "udms_testcol" column seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('droping "udms_testcol" column failed', ['color' => 'red']);
+            exitcode('7');
+        }
+
+        banner('table column over "udms_testtable" table on "udms_testdb" database testing done.');
+        $udms->dropDatabase('udms_testdb');
+
+        banner('done service testing.');
+
+        banner('starting data service testing...');
+        $udms->setAppModel($sdm);
+        $udms->render();
+        banner('importing data');
+        include $path . 'test/src/import.php';
+        banner('importing data done');
+        $datatest = $udms->school->class->get(['relation' => true]);
+        if ($datatest[1]['t_id']['lname'] == 'karimi' and $datatest[1]['t_id']['id'] == 73500 and $datatest[1]['c_id']['c_id']['id'] == 2 and $datatest[1]['c_id']['sub_id']['id'] == 1) {
+            banner('data import test seccessfuly', ['color' => 'green']);
+        } else {
+            banner('data import test failed', ['color' => 'red']);
+            exitcode('8');
+        }
+
+        banner('update data service testing...');
+        $udms->school->teacher->update($t2,
+            [
+                'fname' => 'torabizade'
+            ]
+        );
+        $udst = $udms->school->teacher->getByUid($t2);
+        if ($udst['fname'] == 'torabizade') {
+            banner('update data service testing seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('update data service testing is failed.', ['color' => 'red']);
+            exitcode('9');
+        }
+
+        banner('delete data service testing...');
+        $udms->school->teacher->delete($t2);
+        $ddst = $udms->school->teacher->getByUid($t2);
+        if (count($ddst) == 0) {
+            banner('delete data service testing seccessfuly.', ['color' => 'green']);
+        } else {
+            banner('delete data service testing is failed.', ['color' => 'red']);
+            exitcode('10');
+        }
+
+        banner('data service testing is done.');
+
+        banner('done ' . $dm . ' addon test.');
+        $end_micro = explode(' ', microtime());
+        $end_micro = $end_micro[1] . '.' . str_replace('0.', '', $end_micro[0]);
+        if ($d2t == 1) {
+            $udms->desD2TMode();
+            $udms->dropDatabase('d2tdb');
+            banner($dm . ' addon test with D2T Mode in ' . ($end_micro - $start_micro) . ' sec', ['color' => 'light_yellow']);
+            banner('Full ' . $dm . ' addon test in ' . ($end_micro - $ft) . ' sec', ['color' => 'light_green']);
+            $fat = $fat + $end_micro - $ft;
+        } else {
+            $ft = $start_micro;
+            $udms->dropDatabase('school');
+            banner($dm . ' addon test in ' . ($end_micro - $start_micro) . ' sec', ['color' => 'light_yellow']);
+        }
+    }
+    $ft = 0;
+    $i++;
+}
+
+Tools::rmDir($udmsCacheDir);
+banner('done udms test in ' . $fat . ' sec.', ['background' => 'green', 'color' => 'white']);
+
+banner('----------- End -----------', ['color' => 'white']);
+banner('exitcode: 0', ['color' => 'green']);
+exit(0);

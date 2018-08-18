@@ -45,5 +45,5 @@ interface Addon
 
     public function get($db, $table);
 
-    public function __construct($path, $udmsCacheDir, $option = []);
+    public function __construct($point, $option = []);
 }

@@ -1,4 +1,4 @@
-# Using Monolog
+# Using UDMS
 
 - [Installation](#installation)
 - [Core Concepts](#core-concepts)
@@ -34,6 +34,7 @@
   2. [Update](#update)
   3. [Delete](#delete)
   4. [Find](#find)
+  4. [Get](#get)
 
 ## Installation
 
@@ -47,7 +48,7 @@ If you do not use Composer, you can grab the code from GitHub, and use any PSR-0
 
 ## Core Concepts
 
-coming soon!
+*Coming soon!*
 
 ### Get udms
 
@@ -65,8 +66,16 @@ $udms = new udms('/path/to/database/dir');
 ### Get available addons
 
 ``` php
-// array available addons
 $list = $udms->getAddonsList();
+/* output array
+ * example:
+  Array
+  (
+      [0] => MySQL
+      [1] => MongoDB
+      [2] => Json
+  )
+ */
 ```
 
 ### Set addon
@@ -74,6 +83,7 @@ $list = $udms->getAddonsList();
 Set you Selection addon
 
 ``` php
+// output void
 $udms->setAddon('json');
 ```
 
@@ -82,7 +92,7 @@ $udms->setAddon('json');
 ### Set App Model
 
 ``` php
-$udms->setAppDataModel(
+$udms->setAppModel(
   [
     'school' // database name
     => [
@@ -112,6 +122,7 @@ $udms->setAppDataModel(
     ]
   ]
 );
+// output void
 ```
 
 ### Render
@@ -119,7 +130,10 @@ $udms->setAppDataModel(
 Render App model for Your selection addon:
 
 ``` php
-// important: first set addon and next render!
+/*
+ * important: first set addon and next render!
+ * output void
+ */
 $udms->render();
 ```
 
@@ -130,6 +144,7 @@ $udms->render();
 Some addons (example mysql) with some config, Does not allow for Create Database. this method for test available create database.
 
 ``` php
+// output Boolean
 if($udms->availableDatabaseRule()) {
   // available
 } else {
@@ -140,6 +155,7 @@ if($udms->availableDatabaseRule()) {
 ### Create Database
 
 ``` php
+// output void
 $udms->createDatabase('school',
   [] // config
 );
@@ -150,6 +166,7 @@ $udms->createDatabase('school',
 Check exists Database
 
 ``` php
+// output Boolean
 if($udms->existsDatabase('school')) {
   // exists
 } else {
@@ -160,13 +177,17 @@ if($udms->existsDatabase('school')) {
 ### Drop Database
 
 ``` php
-// Warning: delete databse dir in udms chache dir
+/*
+ * Warning: delete databse dir in udms chache dir
+ * output void
+ */
 $udms->dropDatabase('school');
 ```
 
 ### Rename Database
 
 ``` php
+// output void
 $udms->renameDatabase('school', 'to');
 ```
 
@@ -174,6 +195,13 @@ $udms->renameDatabase('school', 'to');
 
 ``` php
 $list = $udms->listDatabases();
+/* output array
+ * example:
+  Array
+  (
+      [0] => school
+  )
+ */
 ```
 
 ## Tables method
@@ -183,6 +211,7 @@ $list = $udms->listDatabases();
 Check available table rule
 
 ``` php
+// output Boolean
 if($udms->school->availableTableRule()) {
   // available
 } else {
@@ -193,6 +222,7 @@ if($udms->school->availableTableRule()) {
 ### Create Table
 
 ``` php
+// output void
 $udms->school->createTable('studnet',
   [] // config
 );
@@ -203,6 +233,7 @@ $udms->school->createTable('studnet',
 Check exist table
 
 ``` php
+// output Boolean
 if($udms->school->existsTable('studnet')) {
   // exists
 } else {
@@ -213,19 +244,24 @@ if($udms->school->existsTable('studnet')) {
 ### Drop Table
 
 ``` php
+// output void
 $udms->school->dropTable('studnet');
 ```
 
 ### Rename Table
 
 ``` php
-// Warning: delete databse dir in udms chache dir
+/*
+ * Notice: rename database dir in udms cache dir
+ * output void
+ */
 $udms->school->renameTable('studnet', 'to');
 ```
 
 ### Clean Table
 
 ``` php
+// output void
 $udms->school->cleanTable('studnet');
 ```
 
@@ -233,6 +269,15 @@ $udms->school->cleanTable('studnet');
 
 ``` php
 $list = $udms->school->listTables();
+/* output array
+ * example:
+  Array
+  (
+      [0] => class
+      [1] => students
+      [2] => teacher
+  )
+ */
 ```
 
 ### Columns method
@@ -242,6 +287,7 @@ $list = $udms->school->listTables();
 Check available columns rule
 
 ``` php
+// output Boolean
 if($udms->school->availableColumnRule()) {
   // available
 } else {
@@ -252,6 +298,7 @@ if($udms->school->availableColumnRule()) {
 ### Create Column
 
 ``` php
+// output void
 $udms->school->student->createColumn('studnet',
   [] // config
 );
@@ -262,6 +309,7 @@ $udms->school->student->createColumn('studnet',
 Check exists column
 
 ``` php
+// output Boolean
 if($udms->school->student->existsColumn('studnet')) {
   // exists
 } else {
@@ -272,6 +320,7 @@ if($udms->school->student->existsColumn('studnet')) {
 ### Drop Column
 
 ``` php
+// output void
 $udms->school->student->dropColumn('studnet');
 ```
 
@@ -279,6 +328,15 @@ $udms->school->student->dropColumn('studnet');
 
 ``` php
 $list = $udms->school->student->listColumns();
+/* output array
+ * example:
+  Array
+  (
+      [0] => id
+      [1] => first_name
+      [2] => last_name
+  )
+ */
 ```
 
 ## Data methods
@@ -292,11 +350,15 @@ $uid = $udms->school->student->insert(
     'lname' => 'hosseinzade'
   ]
 );
+/* output String
+ * string "c4ca4238a0b923820dcc509a6f75849b"
+ */
 ```
 
 ### Update
 
 ``` php
+// output void
 $udms->school->student->update($uid,
   [
     'fname' => 'arshen'
@@ -307,6 +369,7 @@ $udms->school->student->update($uid,
 ### Delete
 
 ``` php
+// output void
 $udms->school->student->delete($uid);
 ```
 
@@ -316,19 +379,92 @@ $udms->school->student->delete($uid);
 $list_1 = $udms->school->student->find(
   [
     'id' => [
-      '<' => 9300000,
+      '<' => 9400000,
       '>' => 9200000
     ],
     'lname' => [
-      'match' => '(zade)+'
+      'match' => '/(zade)+/'
     ]
   ],
   // options
   [
-    'relation' => true,
+    'relation' => false,
     'sort' => [
       'name' => SORT_DESC
     ]
   ]
 );
+/* output array
+ * example
+ Array
+ (
+     [0] => Array
+         (
+             [fname] => mehdi
+             [lname] => hosseinzade
+             [id] => 93000000
+             [__udms_id] => 529d1ff34a86af52e136858a8e7efc40
+         )
+ )
+ */
+```
+
+### Get
+
+alias find method without filter
+
+``` php
+$list_1 = $udms->school->student->get(
+  [
+    'relation' => false,
+    'sort' => [
+      'lname' => SORT_ASC
+    ]
+  ]
+);
+/* output array
+ * example:
+ Array
+ (
+     [0] => Array
+         (
+             [fname] => alireza
+             [lname] => aghaeipour
+             [id] => 93000172
+             [__udms_id] => 92277596d3fe0baaf6814caaa2f9fb17
+         )
+
+     [1] => Array
+         (
+             [fname] => mehdi
+             [lname] => hosseinzade
+             [id] => 93000000
+             [__udms_id] => 529d1ff34a86af52e136858a8e7efc40
+         )
+
+     [2] => Array
+         (
+             [fname] => abolfazl
+             [lname] => nazerpanah
+             [id] => 93000129
+             [__udms_id] => 390aa37bf6aabfa8af16bb729f02d207
+         )
+
+     [3] => Array
+         (
+             [fname] => mehrzad
+             [lname] => poureghbal
+             [id] => 93000043
+             [__udms_id] => 64df99136dc56fc4ba306a1fffe75231
+         )
+
+     [4] => Array
+         (
+             [fname] => mohammad
+             [lname] => rezaei
+             [id] => 93000086
+             [__udms_id] => 1fa3d2ab103b82e368c534f87720f8e2
+         )
+ )
+ */
 ```

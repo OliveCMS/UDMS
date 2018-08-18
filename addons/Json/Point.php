@@ -1,16 +1,20 @@
 <?php
 namespace Olive\UDMS\Addon\Json;
 
+use Olive\Tools;
 use Olive\UDMS\Common as Common;
 use Olive\UDMS\Model\Addon as Addon;
-use Olive\Tools;
 class Point implements Addon
 {
     use Common;
 
+    private $cacheDB;
+
+    private $cacheDBC;
+
     public function createDatabase($name, $options)
     {
-        $dir = $this->getUCPath($name . '/json/');
+        $dir = $this->getCore->getUCPath($name . '/json/');
         if (! is_dir($dir)) {
             mkdir($dir);
         }
@@ -20,12 +24,12 @@ class Point implements Addon
 
     public function dropDatabase($name)
     {
-        Tools::rmDir($this->getUCPath($name . '/json/'));
+        Tools::rmDir($this->getCore->getUCPath($name . '/json/'));
     }
 
     public function existsDatabase($name)
     {
-        if (file_exists($this->getUCPath($name . '/json/db.json'))) {
+        if (file_exists($this->getCore->getUCPath($name . '/json/db.json'))) {
             return true;
         } else {
             return false;
@@ -35,9 +39,9 @@ class Point implements Addon
     public function listDatabases()
     {
         $return = [];
-        $dbdirs = Tools::getDirList($this->getUCPath());
+        $dbdirs = Tools::getDirList($this->getCore->getUCPath());
         foreach ($dbdirs as $db) {
-            if (file_exists($this->getUCPath($db . '/json/db.json'))) {
+            if (file_exists($this->getCore->getUCPath($db . '/json/db.json'))) {
                 $return[] = $db;
             }
         }
@@ -51,32 +55,32 @@ class Point implements Addon
 
     private function get_db($name)
     {
-        if (! isset($GLOBALS['__udms_global']['addon']['json']['db'][$name])) {
-            $GLOBALS['__udms_global']['addon']['json']['db'][$name] = Tools::getJsonFile($this->getUCPath($name . '/json/db.json'));
+        if (is_null($this->cacheDB)) {
+            $this->cacheDB = Tools::getJsonFile($this->getCore->getUCPath($name . '/json/db.json'));
         }
 
-        return $GLOBALS['__udms_global']['addon']['json']['db'][$name];
+        return $this->cacheDB;
     }
 
     private function update_db($name, $data = [])
     {
-        Tools::file($this->getUCPath($name . '/json/db.json'), Tools::jsonEncode($data));
-        $GLOBALS['__udms_global']['addon']['json']['db'][$name] = $data;
+        Tools::file($this->getCore->getUCPath($name . '/json/db.json'), Tools::jsonEncode($data));
+        $this->cacheDB = $data;
     }
 
     private function get_dbc($name)
     {
-        if (! isset($GLOBALS['__udms_global']['addon']['json']['config'][$name])) {
-            $GLOBALS['__udms_global']['addon']['json']['config'][$name] = Tools::getJsonFile($this->getUCPath($name . '/json/config.json'));
+        if (is_null($this->cacheDBC)) {
+            $this->cacheDBC = Tools::getJsonFile($this->getCore->getUCPath($name . '/json/config.json'));
         }
 
-        return $GLOBALS['__udms_global']['addon']['json']['config'][$name];
+        return $this->cacheDBC;
     }
 
     private function update_dbc($name, $data = [])
     {
-        Tools::file($this->getUCPath($name . '/json/config.json'), Tools::jsonEncode($data));
-        $GLOBALS['__udms_global']['addon']['json']['config'][$name] = $data;
+        Tools::file($this->getCore->getUCPath($name . '/json/config.json'), Tools::jsonEncode($data));
+        $this->cacheDBC = $data;
     }
 
     public function createTable($db, $name, $options)
@@ -221,9 +225,8 @@ class Point implements Addon
         }
     }
 
-    public function __construct($path, $udmsCacheDir, $option = [])
+    public function __construct($point, $option = [])
     {
-        $this->setPath($path);
-        $this->setUCPath($udmsCacheDir);
+        $this->getCore = $point;
     }
 }

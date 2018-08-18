@@ -1,8 +1,8 @@
 <?php
 namespace Olive\UDMS\Model;
 
-use Olive\UDMS\Exception\Custom as UException;
 use Olive\UDMS\Common as Common;
+use Olive\UDMS\Exception\Custom as UException;
 class table
 {
     use Common;
@@ -85,7 +85,7 @@ class table
 
     public function listColumns()
     {
-        $cl = $this->execute->listColumns($this->dbname, $this->table);
+        $cl = $this->getCore->execute->listColumns($this->dbname, $this->table);
         if (is_array($cl)) {
             return $cl;
         } else {
@@ -95,24 +95,29 @@ class table
 
     public function existsColumn($name)
     {
-        return $this->execute->existsColumn($this->dbname, $this->table, $name);
+        if ($name != '__udms_id' and ! \Olive\UDMS\Core::validName($name)) {
+            throw new UException($this->getCore->getUCPath(), $name . ' name is not valid!', 126);
+        }
+
+        return $this->getCore->execute->existsColumn($this->dbname, $this->table, $name);
     }
 
     public function createColumn($name, $options = [])
     {
-        if (! \Olive\UDMS\Core::validName($name)) {
-            throw new UException($this->getUCPath(), $name . 'name is not valid!');
-        }
         if ($this->existsColumn($name)) {
-            throw new UException($this->getUCPath(), 'your col name has exists (' . $name . ')');
+            throw new UException($this->getCore->getUCPath(), 'your column name has exists (' . $name . ')', 127);
         }
         if (count($options) == 0) {
-            throw new UException($this->getUCPath(), 'can not create column without option!');
+            throw new UException($this->getCore->getUCPath(), 'can not create column without option!', 128);
         }
-        if (! isset($options['type'])) {
+        if (! isset($options['type']) or (isset($options['type']) and $options['type'] == '')) {
             $options['type'] = 'text';
         }
-        $this->execute->createColumn($this->dbname, $this->table, $name, $options);
+        if (! isset($options['length'])) {
+            $options['length'] = '';
+        }
+        $this->getCore->execute->createColumn($this->dbname, $this->table, $name, $options);
+        $ud = $this->getCore->getDatabaseModelData($this->dbname);
         if (isset($options['auto'])) {
             if (count($options['auto']) == 0) {
                 $start = 1;
@@ -125,48 +130,50 @@ class table
                     $add = $options['auto']['add'];
                 }
             }
-            $ud = $this->getDatabaseModelData($this->dbname);
             $ud[$this->table]['auto'][$name] = [
-                  'start' => $start,
-                  'add' => $add,
-                  'last' => $start - $add
-                ];
-            $this->updateDatabaseModelData($this->dbname, $ud);
+              'start' => $start,
+              'add' => $add,
+              'last' => $start - $add
+            ];
         }
         if (isset($options['__udms_rel'])) {
-            $ud = $this->getDatabaseModelData($this->dbname);
-            $ud[$this->table]['rels'][$name] = $options['__udms_rel'];
-            $this->updateDatabaseModelData($this->dbname, $ud);
+            $tableo = key($options['__udms_rel']);
+            $table = $this->getCore->prefix . $tableo;
+            $ud[$this->table]['rels'][$name][$table] = $options['__udms_rel'][$tableo];
+            if ($this->getCore->prefix != '') {
+                $options['__udms_rel'][$table] = $options['__udms_rel'][$tableo];
+                unset($options['__udms_rel'][$tableo]);
+            }
         }
         if (isset($options['index']) == 'primary') {
-            $ud = $this->getDatabaseModelData($this->dbname);
             $ud[$this->table]['index']['primary'][] = $name;
-            $this->updateDatabaseModelData($this->dbname, $ud);
         }
-        $ui = $this->getDatabaseModel($this->dbname);
+        $ud[$this->table]['columns'][$name] = $options;
+        $this->getCore->updateDatabaseModelData($this->dbname, $ud);
+        $ui = $this->getCore->getDatabaseModel($this->dbname);
         if (! isset($ui[$this->table][$name])) {
             $ui[$this->table][$name] = $options;
-            $this->updateDatabaseModel($this->dbname, $ui);
+            $this->getCore->updateDatabaseModel($this->dbname, $ui);
         }
     }
 
     public function dropColumn($name)
     {
-        if (! \Olive\UDMS\Core::validName($name)) {
-            throw new UException($this->getUCPath(), $name . 'name is not valid!');
-        }
         if (! $this->existsColumn($name)) {
-            throw new UException($this->getUCPath(), 'your col name has not exists (' . $name . ')');
+            throw new UException($this->getCore->getUCPath(), 'your col name has not exists (' . $name . ')', 129);
         }
-        $this->execute->dropColumn($this->dbname, $this->table, $name);
-        $ui = $this->getDatabaseModel($this->dbname);
+        $this->getCore->execute->dropColumn($this->dbname, $this->table, $name);
+        $ui = $this->getCore->getDatabaseModel($this->dbname);
         unset($ui[$this->table][$name]);
-        $this->updateDatabaseModel($this->dbname, $ui);
+        $this->getCore->updateDatabaseModel($this->dbname, $ui);
+        $ud = $this->getCore->getDatabaseModelData($this->dbname);
+        unset($ud[$this->table][$name]);
+        $this->getCore->updateDatabaseModelData($this->dbname, $ud);
     }
 
     private function getNextInsert($col, $add = 0, $start = 0)
     {
-        $ud = $this->getDatabaseModelData($this->dbname);
+        $ud = $this->getCore->getDatabaseModelData($this->dbname);
         $last = $ud[$this->table]['auto'][$col]['last'];
         $start = $ud[$this->table]['auto'][$col]['start'];
         if ($add == 0) {
@@ -180,7 +187,7 @@ class table
           'add' => $add,
           'last' => $last
         ];
-        $this->updateDatabaseModelData($this->dbname, $ud);
+        $this->getCore->updateDatabaseModelData($this->dbname, $ud);
 
         return $last;
     }
@@ -192,7 +199,7 @@ class table
 
     public function find($filters = [], $options = [])
     {
-        $data = $this->execute->get($this->dbname, $this->table);
+        $data = $this->getCore->execute->get($this->dbname, $this->table);
         $return = [];
         foreach ($data as $row) {
             $ok = 0;
@@ -221,7 +228,7 @@ class table
                 }
             }
             if ($ok == 0) {
-                $ud = $this->getDatabaseModelData($this->dbname);
+                $ud = $this->getCore->getDatabaseModelData($this->dbname);
                 if (isset($options['relation']) and $options['relation'] == true and isset($ud[$this->table]['rels'])) {
                     foreach ($ud[$this->table]['rels'] as $col => $ci) {
                         $e = key($ci);
@@ -230,15 +237,15 @@ class table
                         if ($this->table != $e) {
                             $cie = 0;
                             if ($this->inReservedName($e)) {
-                                $this->addLog('your table name is reserved! (' . $e . ')', __FILE__, __LINE__);
+                                $this->getCore->addLog('your table name is reserved! (' . $e . ')', __FILE__, __LINE__);
                                 $cie = 1;
                             }
-                            if (! $this->execute->existsTable($this->dbname, $e)) {
-                                $this->addLog('your table name can not found! (' . $name . ')', __FILE__, __LINE__);
+                            if (! $this->getCore->execute->existsTable($this->dbname, $e)) {
+                                $this->getCore->addLog('your table name can not found! (' . $e . ')', __FILE__, __LINE__);
                                 $cie = 1;
                             }
                             if ($cie == 0) {
-                                $rc = new self($this->dbname, $e, $this->path, $this->udmsCacheDir, $this->execute, $this->reservedName);
+                                $rc = new self($this->getCore, $this->dbname, $e, $this->reservedName);
                                 $rcd = $rc->find([$c => ['==' => $row[$col]]], ['relation' => true]);
                                 if ($rc->isPrimary($c)) {
                                     if (count($rcd) == 1) {
@@ -288,19 +295,18 @@ class table
             unset($data['__udms_id']);
         }
         if (count($data) == 0) {
-            throw new UException($this->getUCPath(), 'your data can not empty for insert');
+            throw new UException($this->getCore->getUCPath(), 'your data can not empty for insert', 130);
         }
-        $ui = $this->getDatabaseModel($this->dbname);
-        $ud = $this->getDatabaseModelData($this->dbname);
+        $ud = $this->getCore->getDatabaseModelData($this->dbname);
         $cols = array_keys($data);
-        $uics = array_keys($ui[$this->table]);
+        $uics = array_keys($ud[$this->table]['columns']);
         $uacs = array_keys($ud[$this->table]['auto']);
         $upcs = $ud[$this->table]['index']['primary'];
         foreach ($cols as $col) {
             if ($this->existsColumn($col)) {
                 if (in_array($col, $upcs)) {
                     if ($this->existsPrimary($col, $data[$col])) {
-                        throw new UException($this->getUCPath(), 'your primary col (' . $col . ') value (' . $data[$col] . ') exists!');
+                        throw new UException($this->getCore->getUCPath(), 'your primary col (' . $col . ') value (' . $data[$col] . ') exists!', 131);
                     }
                 }
                 $key = array_search($col, $uics);
@@ -316,13 +322,13 @@ class table
             }
             if (in_array($col, $upcs)) {
                 if (! isset($data[$col])) {
-                    throw new UException($this->getUCPath(), 'your primary col (' . $col . ') can not empty!');
+                    throw new UException($this->getCore->getUCPath(), 'your primary col (' . $col . ') can not empty!', 132);
                 }
             }
         }
         $data['__udms_id'] = md5($data['__udms_id'] . time());
         //check type and length
-        $this->execute->insert($this->dbname, $this->table, $data);
+        $this->getCore->execute->insert($this->dbname, $this->table, $data);
 
         return $data['__udms_id'];
     }
@@ -331,24 +337,23 @@ class table
     {
         $d = $this->find(['__udms_id' => ['==' => $uid]]);
         if (count($d) == 0) {
-            throw new UException($this->getUCPath(), 'your data (' . $uid . ') on (' . $this->table . ') not found!');
+            throw new UException($this->getCore->getUCPath(), 'your data (' . $uid . ') on (' . $this->table . ') not found!', 133);
         }
-        $ui = $this->getDatabaseModel($this->dbname);
-        $ud = $this->getDatabaseModelData($this->dbname);
+        $ud = $this->getCore->getDatabaseModelData($this->dbname);
         $cols = array_keys($data);
         $upcs = $ud[$this->table]['index']['primary'];
         foreach ($cols as $col) {
             if ($this->existsColumn($col)) {
                 if (in_array($col, $upcs)) {
                     if ($this->existsPrimary($col, $data[$col])) {
-                        throw new UException($this->getUCPath(), 'your primary col (' . $col . ') value (' . $data[$col] . ') exists!');
+                        throw new UException($this->getCore->getUCPath(), 'your primary col (' . $col . ') value (' . $data[$col] . ') exists!', 134);
                     }
                 }
             } else {
                 unset($data[$col]);
             }
         }
-        $this->execute->update($this->dbname, $this->table, $uid, $data);
+        $this->getCore->execute->update($this->dbname, $this->table, $uid, $data);
     }
 
     public function getByUid($uid)
@@ -365,14 +370,17 @@ class table
     {
         $d = $this->find(['__udms_id' => ['==' => $uid]]);
         if (count($d) == 0) {
-            throw new UException($this->getUCPath(), 'your row (' . $uid . ') in table (' . $this->table . ') not found');
+            throw new UException($this->getCore->getUCPath(), 'your row (' . $uid . ') in table (' . $this->table . ') not found', 135);
         }
-        $this->execute->delete($this->dbname, $this->table, $uid);
+        $this->getCore->execute->delete($this->dbname, $this->table, $uid);
     }
 
     public function isPrimary($col)
     {
-        $ud = $this->getDatabaseModelData($this->dbname);
+        if (! $this->existsColumn($col)) {
+            throw new UException($this->getCore->getUCPath(), 'your column name not exists (' . $col . ')', 136);
+        }
+        $ud = $this->getCore->getDatabaseModelData($this->dbname);
         if (in_array($col, $ud[$this->table]['index']['primary'])) {
             return true;
         } else {
@@ -382,7 +390,10 @@ class table
 
     public function isAuto($col)
     {
-        $ud = $this->getDatabaseModelData($this->dbname);
+        if (! $this->existsColumn($col)) {
+            throw new UException($this->getCore->getUCPath(), 'your column name not exists (' . $col . ')', 137);
+        }
+        $ud = $this->getCore->getDatabaseModelData($this->dbname);
         if (isset($ud[$this->table]['auto'][$col])) {
             return true;
         } else {
@@ -392,7 +403,10 @@ class table
 
     public function isRel($col)
     {
-        $ud = $this->getDatabaseModelData($this->dbname);
+        if (! $this->existsColumn($col)) {
+            throw new UException($this->getCore->getUCPath(), 'your column name not exists (' . $col . ')', 138);
+        }
+        $ud = $this->getCore->getDatabaseModelData($this->dbname);
         if (isset($ud[$this->table]['rels'][$col])) {
             return true;
         } else {
@@ -403,7 +417,7 @@ class table
     public function existsPrimary($col, $value)
     {
         if (! $this->existsColumn($col)) {
-            throw new UException($this->getUCPath(), 'your col name not exists (' . $col . ')');
+            throw new UException($this->getCore->getUCPath(), 'your column name not exists (' . $col . ')', 139);
         }
         $d = $this->find([$col => ['==' => $value]]);
         if (count($d) > 0) {
@@ -416,7 +430,7 @@ class table
     public function uidToColumn($uid, $col)
     {
         if (! $this->existsColumn($col)) {
-            throw new UException($this->getUCPath(), 'your col ' . $col . ' not exists in table (' . $this->table . ')');
+            throw new UException($this->getCore->getUCPath(), 'your column ' . $col . ' not exists in table (' . $this->table . ')', 140);
         }
         $d = $this->find(['__udms_id' => ['==' => $uid]]);
 
@@ -428,13 +442,11 @@ class table
         return $this->table;
     }
 
-    public function __construct($dbname, $table, $path, $udmsCacheDir, $execute, $reservedName)
+    public function __construct($point, $dbname, $table, $reservedName)
     {
-        $this->setPath($path);
-        $this->setUCPath($udmsCacheDir);
+        $this->getCore = $point;
         $this->dbname = $dbname;
         $this->table = $table;
-        $this->execute = $execute;
         $this->reservedName = $reservedName;
     }
 }

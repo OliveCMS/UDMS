@@ -2,10 +2,10 @@
 namespace Olive\UDMS\Addon\MongoDB;
 
 use MongoDB as MDB;
+use Olive\Tools;
 use Olive\UDMS\Common as Common;
 use Olive\UDMS\Exception\Custom as UException;
 use Olive\UDMS\Model\Addon as Addon;
-use Olive\Tools;
 class Point implements Addon
 {
     use Common;
@@ -22,6 +22,8 @@ class Point implements Addon
 
     private $dse;
 
+    private $cacheDBC;
+
     public function createDatabase($name, $options)
     {
         $create = $this->service->$name->__udms_table;
@@ -30,7 +32,7 @@ class Point implements Addon
             '__udms_id' => '0'
           ]
         );
-        $dir = $this->getUCPath($name . '/mongodb/');
+        $dir = $this->getCore->getUCPath($name . '/mongodb/');
         if (! is_dir($dir)) {
             mkdir($dir);
         }
@@ -126,7 +128,7 @@ class Point implements Addon
             $return[] = $ti['name'];
         }
 
-        return $return;
+        return array_diff($return, ['__udms_table']);
     }
 
     public function renameTable($db, $name, $to)
@@ -142,17 +144,17 @@ class Point implements Addon
 
     private function get_dbc($name)
     {
-        if (! isset($GLOBALS['__udms_global']['addon']['mongodb']['config'][$name])) {
-            $GLOBALS['__udms_global']['addon']['mongodb']['config'][$name] = Tools::getJsonFile($this->getUCPath($name . '/mongodb/config.json'));
+        if (is_null($this->cacheDBC)) {
+            $this->cacheDBC = Tools::getJsonFile($this->getCore->getUCPath($name . '/mongodb/config.json'));
         }
 
-        return $GLOBALS['__udms_global']['addon']['mongodb']['config'][$name];
+        return $this->cacheDBC;
     }
 
     private function update_dbc($name, $data = [])
     {
-        Tools::file($this->getUCPath($name . '/mongodb/config.json'), Tools::jsonEncode($data));
-        $GLOBALS['__udms_global']['addon']['mongodb']['config'][$name] = $data;
+        Tools::file($this->getCore->getUCPath($name . '/mongodb/config.json'), Tools::jsonEncode($data));
+        $this->cacheDBC = $data;
     }
 
     public function createColumn($db, $table, $name, $options)
@@ -254,10 +256,9 @@ class Point implements Addon
         }
     }
 
-    public function __construct($path, $udmsCacheDir, $option = [])
+    public function __construct($point, $option = [])
     {
-        $this->setPath($path);
-        $this->setUCPath($udmsCacheDir);
+        $this->getCore = $point;
         $this->option = $option;
         if (isset($option['login'])) {
             $login = $option['login'];
@@ -269,7 +270,7 @@ class Point implements Addon
         try {
             $db = new MDB\Client($option['type'] . '://' . $option['host'], $login);
         } catch (Excepstion $e) {
-            throw new UException($this->getUCPath(), 'Can not connect to MongoDB.');
+            throw new UException($this->getCore->getUCPath(), 'Can not connect to MongoDB.', 200);
         }
         $this->service = $db;
     }

@@ -50,13 +50,29 @@ $udms->school->student->find(
 - [Usage Instructions](doc/01-usage.md)
 - [Utility Classes](doc/02-utilities.md)
 - [Addons Connect Instructions](doc/03-addons.md)
+- [D2TMode Instructions](doc/04-d2tmode.md)
+- [UDMS Errors](doc/05-error.md)
 
 ## Requirements
 
-- udms 2.x works with PHP 5.5+.
+- UDMS 2.x works with PHP 5.5+.
 - PDO mysql
 - php mongodb module
 
+# Versioning
+
+UDMS will be maintained under the Semantic Versioning guidelines as much as possible. Releases will be numbered with the following format:
+
+`<major>.<minor>.<patch>`
+
+And constructed with the following guidelines:
+
+    major -> Breaking backward compatibility bumps the major
+    minor -> New additions
+    patch -> Bug fixes
+
+For more information on SemVer, please visit http://semver.org.
+
 ## License
 
-UDMS is licensed under the [MIT license](http://opensource.org/licenses/MIT).
+olive-cms/udms is licensed under the [MIT license](http://opensource.org/licenses/MIT).
