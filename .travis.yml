@@ -16,9 +16,5 @@ before_script:
   - composer install
 
 script:
-  - chmod +x ./test/bash.sh
-  - chmod +x ./test/src/bexe.sh
-  - chmod +x ./test/src/lexe.sh
-  - export IS_TRAVIS_CI=dev
-  - cd test
-  - ./bash.sh -y
+  - chmod +x ./test/run
+  - ./run -y

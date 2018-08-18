@@ -75,4 +75,4 @@ For more information on SemVer, please visit http://semver.org.
 
 ## License
 
-UDMS is licensed under the [MIT license](http://opensource.org/licenses/MIT).
+olive-cms/udms is licensed under the [MIT license](http://opensource.org/licenses/MIT).
