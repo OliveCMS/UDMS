@@ -270,7 +270,7 @@ class Point implements Addon
         try {
             $db = new MDB\Client($option['type'] . '://' . $option['host'], $login);
         } catch (Excepstion $e) {
-            throw new UException($this->getCore->getUCPath(), 'Can not connect to MongoDB.');
+            throw new UException($this->getCore->getUCPath(), 'Can not connect to MongoDB.', 200);
         }
         $this->service = $db;
     }

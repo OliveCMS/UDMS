@@ -8,13 +8,18 @@ Core changes:
 
 * Core class
  1. review and rewrite all UDMS namespace classes
- 2. add `getAppDataModel`, `getAppDataModelData`, `setAppDataModelData`, `resetAppModel`, `setD2TMod`, `desD2TMode`, `getD2T` and `setD2T` methods
- 3. rewrite `listDatabases`, `existsDatabase`, `createDatabase`, `renameDatabase` and `dropDatabase` for match with **D2TMode**
- 4. rewrite `setAppDataModel` method
- 5. review and rewrite optimize for `AppModel`, `AppModelData`, `DatabaseModel` and `DatabaseModelData` methods
- 6. fix dropDatabase $keep bug
- 7. fix type (core class -> Core class)
- 8. fix valid name  check bug
+ 2. rename AppDataModel to AppModel
+ 3. add `getAppModel`, `getAppModelData`, `setAppModelData`, `resetAppModel`, `setD2TMod`, `desD2TMode`, `getD2T` and `setD2T` methods
+ 4. rewrite `listDatabases`, `existsDatabase`, `createDatabase`, `renameDatabase` and `dropDatabase` for match with **D2TMode**
+ 5. rewrite `setAppModel` and `render` method
+ 6. review and rewrite optimize for `AppModel`, `AppModelData`, `DatabaseModel` and `DatabaseModelData` methods
+ 7. fix dropDatabase $keep bug
+ 8. fix type (core class -> Core class)
+ 9. fix valid name  check bug
+ 10. add errors code for Exception method
+ 11. update Documentation and Readme page
+ 12. add D2TMode Documentation
+ 13. add Errors Documentation
 * Common class
  1. move path, `DatabaseModel`, `DatabaseModelData` and `addLog` methods to Core class
  2. add `getCore` to reserved name

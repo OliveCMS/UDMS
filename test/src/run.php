@@ -205,7 +205,7 @@ foreach ($dms as $dm) {
         banner('done service testing.');
 
         banner('starting data service testing...');
-        $udms->setAppDataModel($sdm);
+        $udms->setAppModel($sdm);
         $udms->render();
         banner('importing data');
         include $path . 'test/src/import.php';

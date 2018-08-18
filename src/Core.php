@@ -105,7 +105,7 @@ class Core
     {
         $type2 = '\\Olive\\UDMS\\Addon\\' . $type . '\\Point';
         if (! class_exists($type2)) {
-            throw new UException($this->getUCPath(), $type2 . ' is not found!');
+            throw new UException($this->getUCPath(), $type2 . ' is not found.', 101);
         }
         $this->execute = new $type2($this, $option);
         $this->selectedAddon = $type;
@@ -116,7 +116,7 @@ class Core
         return $this->selectedAddon;
     }
 
-    public function validAppDataModel($model = [])
+    public function validAppModel($model = [])
     {
         if (! is_array($model)) {
             return false;
@@ -175,27 +175,27 @@ class Core
         return true;
     }
 
-    public function getAppDataModel()
+    public function getAppModel()
     {
         return $this->cacheAppModel;
     }
 
-    public function getAppDataModelData()
+    public function getAppModelData()
     {
         return $this->cacheAppModelData;
     }
 
-    public function setAppDataModel($model = [])
+    public function setAppModel($model = [])
     {
-        if (! $this->validAppDataModel($model)) {
-            throw new UException($this->getUCPath(), 'your data model is not valid!');
+        if (! $this->validAppModel($model)) {
+            throw new UException($this->getUCPath(), 'your data model is not valid!', 102);
         }
         Tools::file($this->getUCPath('appModel.json'), Tools::jsonEncode($model));
         Tools::file($this->getUCPath('appModelData.json'), Tools::jsonEncode([]));
         $this->resetAppModel();
     }
 
-    public function setAppDataModelData($model = [])
+    public function setAppModelData($model = [])
     {
         $this->cacheAppModelData = $model;
         Tools::file($this->getUCPath('appModelData.json'), Tools::jsonEncode($model));
@@ -246,18 +246,42 @@ class Core
     public function render()
     {
         if ($this->getAddon() == '') {
-            throw new UException($this->getUCPath(), 'render only with set addon. please first set your selection addon and next render!');
+            throw new UException($this->getUCPath(), 'render only with set addon. please first set your selection addon and next render!', 103);
         }
-        $dbs = $this->getAppDataModel();
+        $dbs = $this->getAppModel();
+
+        // first check AppModel
         foreach ($dbs as $db => $ui) {
-            if (! $this->validAppDataModel([$db => $ui])) {
-                throw new UException($this->getUCPath(), 'your data model is not valid!');
+            if (! $this->validAppModel([$db => $ui])) {
+                throw new UException($this->getUCPath(), 'your data model is not valid!', 104);
             }
             if (! isset($ui['__udms_config'])) {
                 $ui['__udms_config'] = [];
             }
             if (! $this->validName($db)) {
-                throw new UException($this->getUCPath(), $db . 'name is not valid!');
+                throw new UException($this->getUCPath(), $db . 'name is not valid!', 105);
+            }
+            unset($ui['__udms_config']);
+            foreach ($ui as $table => $ti) {
+                if (! isset($ti['__udms_config'])) {
+                    $ti['__udms_config'] = [];
+                }
+                if (! $this->validName($table)) {
+                    throw new UException($this->getUCPath(), $table . 'name is not valid!', 106);
+                }
+                unset($ti['__udms_config']);
+                foreach ($ti as $col => $ci) {
+                    if (! $this->validName($col)) {
+                        throw new UException($this->getUCPath(), $col . 'name is not valid!', 107);
+                    }
+                }
+            }
+        }
+
+        // final render
+        foreach ($dbs as $db => $ui) {
+            if (! isset($ui['__udms_config'])) {
+                $ui['__udms_config'] = [];
             }
             $this->createDatabase($db, $ui['__udms_config']);
             unset($ui['__udms_config']);
@@ -265,15 +289,9 @@ class Core
                 if (! isset($ti['__udms_config'])) {
                     $ti['__udms_config'] = [];
                 }
-                if (! $this->validName($table)) {
-                    throw new UException($this->getUCPath(), $table . 'name is not valid!');
-                }
                 $this->$db->createTable($table, $ti['__udms_config']);
                 unset($ti['__udms_config']);
                 foreach ($ti as $col => $ci) {
-                    if (! $this->validName($col)) {
-                        throw new UException($this->getUCPath(), $col . 'name is not valid!');
-                    }
                     $this->$db->$table->createColumn($col, $ci);
                 }
             }
@@ -283,13 +301,13 @@ class Core
     public function setD2TMode($database = '')
     {
         if (! $this->validName($database)) {
-            throw new UException($this->getUCPath(), $database . ' name is not valid!');
+            throw new UException($this->getUCPath(), $database . ' name is not valid!', 108);
         }
         if ($this->inReservedName($database)) {
-            throw new UException($this->getUCPath(), 'your database name is reserved! (' . $database . ')');
+            throw new UException($this->getUCPath(), 'your database name is reserved! (' . $database . ')', 109);
         }
         if (! $this->existsDatabase($database)) {
-            throw new UException($this->getUCPath(), 'database name selected (' . $database . ') in d2tMode not exists.');
+            throw new UException($this->getUCPath(), 'database D2TMode name (' . $database . ') not exists.', 110);
         }
 
         $this->createDatabaseDir($database);
@@ -352,7 +370,7 @@ class Core
     public function createDatabase($name, $option = [])
     {
         if ($this->existsDatabase($name)) {
-            throw new UException($this->getUCPath(), 'your database name has exists (' . $name . ')!');
+            throw new UException($this->getUCPath(), 'your database name has exists (' . $name . ')!', 111);
         }
         if ($this->d2tMode == false) {
             $this->createDatabaseDir($name);
@@ -378,14 +396,14 @@ class Core
                 $this->setD2T(array_diff($this->getD2T(), [$name]));
             }
         } else {
-            throw new UException($this->getUCPath(), 'your database name has not exists (' . $name . ')');
+            throw new UException($this->getUCPath(), 'your database name has not exists (' . $name . ')', 112);
         }
     }
 
     public function existsDatabase($name)
     {
         if (! $this->validName($name)) {
-            throw new UException($this->getUCPath(), $name . 'name is not valid!');
+            throw new UException($this->getUCPath(), $name . 'name is not valid!', 113);
         }
         if ($this->d2tMode == false) {
             return $this->execute->existsDatabase($name);
@@ -397,10 +415,10 @@ class Core
     public function renameDatabase($name, $to)
     {
         if ($this->existsDatabase($to)) {
-            throw new UException($this->getUCPath(), 'your database name exists (' . $to . ')');
+            throw new UException($this->getUCPath(), 'your database name has exists (' . $to . ')', 115);
         }
         if (! $this->existsDatabase($name)) {
-            throw new UException($this->getUCPath(), 'your database name has not exists (' . $name . ')');
+            throw new UException($this->getUCPath(), 'your database name has not exists (' . $name . ')', 114);
         }
         if ($this->d2tMode == false) {
             $this->execute->renameDatabase($name, $to);
@@ -424,10 +442,10 @@ class Core
     public function __get($name)
     {
         if ($this->inReservedName($name)) {
-            throw new UException($this->getUCPath(), 'your database name is reserved! (' . $name . ')');
+            throw new UException($this->getUCPath(), 'your database name is reserved! (' . $name . ')', 116);
         }
         if (! $this->existsDatabase($name)) {
-            throw new UException($this->getUCPath(), 'your database name can not found! (' . $name . ')');
+            throw new UException($this->getUCPath(), 'can not found your database name! (' . $name . ')', 117);
         }
         $this->od = $name;
         if ($this->d2tMode == false) {
@@ -444,7 +462,7 @@ class Core
         if ($udmsCacheDir != null) {
             $ec = dirname($udmsCacheDir);
             if (! is_dir($ec)) {
-                throw new UException($udmsCacheDir, 'Can not access your UMDS Cache directory path!');
+                throw new UException($udmsCacheDir, 'Can not access your UMDS Cache directory path!', 100);
             }
         }
         $this->setPath();

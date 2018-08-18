@@ -345,7 +345,7 @@ class Point implements Addon
             $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
         } catch (Excepstion $e) {
-            throw new UException($this->getCore->getUCPath(), 'Can not connect PDO to mysql.');
+            throw new UException($this->getCore->getUCPath(), 'Can not connect PDO to mysql.', 300);
         }
         $this->service = $db;
         $this->type = $option['type'];
