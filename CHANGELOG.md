@@ -1,10 +1,10 @@
 # Changelog
 
-# v2.0
+## v2.0
 
 UDSM now have D2T (Database 2 Table) mode! this option is a solution for when Addon can not auto create database! with this mode, app can create auto database.
 
-Core changes:
+### Core changes:
 
 * Core class
  1. review and rewrite all UDMS namespace classes
@@ -31,7 +31,7 @@ Core changes:
  2. add columns list to DatabaseModelData
  3. set default value column type and lenght when null
 
-Addons changes:
+### Addons changes:
 
 * Json
   1. review and rewrite optimize for db and dbc functions
@@ -45,13 +45,14 @@ Addons changes:
   2. fix set null column type and lenght
   3. rewrite point core methods
 
-Test case changes:
+### Test case changes:
 
-1. fix rmDir use with new Olive\\Tools
-2. add `D2TMode` case
-3. add addon cases and full test time
+1. rewrite with ColorConsole
+2. fix rmDir use with new Olive\\Tools
+3. add `D2TMode` case
+4. add addon cases and full test time
 
-# v1.0
+## v1.0
 
 release fast project.
 

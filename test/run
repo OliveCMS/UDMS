@@ -2,6 +2,7 @@
 <?php
 
 $path = realpath(dirname(__FILE__) . '/../') . '/';
+$udmsCacheDir = $path . 'test/database';
 require_once $path . 'vendor/autoload.php';
 
 use Olive\Tools;
@@ -36,15 +37,16 @@ if (isset($argv)) {
     die();
 }
 if ($caccept == false and $accept == 'n') {
-    echo C::render('Warning!! when run this test, remove your all data!', ['color' => 'red']) . PHP_EOL;
-    $accept = readline('Are you ready for continue? (y/n): ');
+    echo C::render('Warning!! when run this test, remove ', ['color' => 'red']);
+    echo C::render($udmsCacheDir, ['color' => 'white', 'background' => 'red']);
+    echo C::render(' dir!', ['color' => 'red']) . PHP_EOL;
+    echo C::render('Are you ready for continue? (y/n): ', ['color' => 'yellow']);
+    $accept = readline();
 }
 if ($accept == 'n') {
     echo C::render('exit') . PHP_EOL;
     exit(1);
 }
-
-$udmsCacheDir = $path . 'test/database';
 
 banner('#1 removeing all data...');
 Tools::rmDir($udmsCacheDir);
