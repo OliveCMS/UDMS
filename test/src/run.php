@@ -49,208 +49,222 @@ banner('----------- Start -----------', 'WHITE');
 
 require_once $path . 'vendor/autoload.php';
 
-use Olive\UDMS\Core as udms;
 use Olive\Tools;
+use Olive\UDMS\Core as udms;
 
-$udms = new udms($path . 'test/database');
+$udmsCacheDir = $path . 'test/database';
 
 banner('#1 removeing all data...');
-$dd = Tools::getDirList($udms->getUCPath());
-foreach ($dd as $value) {
-    Tools::rmDir($udms->getUCPath($value));
-}
-foreach ($dd as $value) {
-    if (is_dir($udms->getUCPath($value))) {
-        banner('failed remove data!!');
-        exidcode('1');
-    }
+Tools::rmDir($udmsCacheDir);
+if (is_dir($udmsCacheDir)) {
+    banner('failed remove data!!');
+    exidcode('1');
 }
 banner('removed all data');
+
+$udms = new udms($udmsCacheDir);
 
 $dms = $udms->getAddonsList();
 banner('found (' . count($dms) . ') data manager');
 
 include $path . 'test/src/simpleAppDatabaseModel.php';
-$sdmdbs = [];
-foreach ($sdm as $db => $value) {
-    $sdmdbs[] = $db;
-}
+
 banner('#2 starting udms test...');
 
 $i = 1;
+$ft = 0;
+$fat = 0;
 foreach ($dms as $dm) {
-    $start_micro = explode(' ', microtime());
-    $start_micro = $start_micro[1] . '.' . str_replace('0.', '', $start_micro[0]);
-    banner('#' . ($i + 2) . ' starting ' . $dm . ' addon test...', 'PURPLE');
-    $udms->setAddon($dm, Tools::getJsonFile($udms->getPath('addons/' . $dm . '/test/tc.json')));
+    banner('#' . ($i + 2) . ' starting ' . $dm . ' addon test...', 'LPURPLE');
+    for ($d2t = 0;$d2t < 2;$d2t++) {
+        $start_micro = explode(' ', microtime());
+        $start_micro = $start_micro[1] . '.' . str_replace('0.', '', $start_micro[0]);
 
-    banner('starting database service test...');
+        $udms->setAddon($dm, Tools::getJsonFile($udms->getPath('addons/' . $dm . '/test/tc.json')));
+        if ($d2t == 1) {
+            banner('starting D2T Mode database service test...', 'PURPLE');
+            $udms->createDatabase('d2tdb');
+            $udms->setD2TMode('d2tdb');
+        } else {
+            banner('starting database service test...', 'PURPLE');
+        }
 
-    banner('create "udms_testdb" database...');
-    $udms->createDatabase('udms_testdb');
-    if ($udms->existsDatabase('udms_testdb') == true) {
-        banner('create "udms_testdb" database seccessfuly.', 'GREEN');
-    } else {
-        banner('create "udms_testdb" database failed', 'RED');
-        exidcode('2');
+        banner('create "udms_testdb" database...');
+        $udms->createDatabase('udms_testdb');
+        if ($udms->existsDatabase('udms_testdb') == true) {
+            banner('create "udms_testdb" database seccessfuly.', 'GREEN');
+        } else {
+            banner('create "udms_testdb" database failed', 'RED');
+            exidcode('2');
+        }
+
+        banner('getting databases list...');
+        $dl = $udms->listDatabases();
+        if (in_array('udms_testdb', $dl)) {
+            banner('getting databases list seccessfuly.', 'GREEN');
+        } else {
+            banner('getting databases list failed', 'RED');
+            exidcode('11');
+        }
+
+        banner('rename "udms_testdb" database to "udms_testdb2"...');
+        $udms->renameDatabase('udms_testdb', 'udms_testdb2');
+        if ($udms->existsDatabase('udms_testdb2') == true) {
+            banner('rename "udms_testdb" database to "udms_testdb2" seccessfuly.', 'GREEN');
+        } else {
+            banner('rename "udms_testdb" database to "udms_testdb2 failed', 'RED');
+            exidcode('3');
+        }
+
+        banner('droping "udms_testdb2" database...');
+        $udms->dropDatabase('udms_testdb2');
+        if ($udms->existsDatabase('udms_testdb2') == false) {
+            banner('droping "udms_testdb2" database seccessfuly.', 'GREEN');
+        } else {
+            banner('droping "udms_testdb2" database failed', 'RED');
+            exidcode('4');
+        }
+
+        banner('database service testing done.');
+
+        banner('starting table service over "udms_testdb" database test...');
+        $udms->createDatabase('udms_testdb');
+
+        banner('create "udms_testtable" table...');
+        $udms->udms_testdb->createTable('udms_testtable');
+        if ($udms->udms_testdb->existsTable('udms_testtable') == true) {
+            banner('create "udms_testtable" table seccessfuly.', 'GREEN');
+        } else {
+            banner('create "udms_testtable" table failed', 'RED');
+            exidcode('5');
+        }
+
+        banner('getting tables list...');
+        $tl = $udms->udms_testdb->listTables();
+        if (in_array('udms_testtable', $tl)) {
+            banner('getting tables list seccessfuly.', 'GREEN');
+        } else {
+            banner('getting tables list failed', 'RED');
+            exidcode('12');
+        }
+
+        banner('rename "udms_testtable" table to "udms_testtable2"...');
+        $udms->udms_testdb->renameTable('udms_testtable', 'udms_testtable2');
+        if ($udms->udms_testdb->existsTable('udms_testtable2') == true) {
+            banner('rename "udms_testtable" table to "udms_testtable2" seccessfuly.', 'GREEN');
+        } else {
+            banner('rename "udms_testtable" table to "udms_testtable2 failed', 'RED');
+            exidcode('6');
+        }
+
+        banner('droping "udms_testtable2" table...');
+        $udms->udms_testdb->dropTable('udms_testtable2');
+        if ($udms->udms_testdb->existsTable('udms_testtable2') == false) {
+            banner('droping "udms_testtable2" table seccessfuly.', 'GREEN');
+        } else {
+            banner('droping "udms_testtable2" table failed', 'RED');
+            exidcode('7');
+        }
+
+        banner('table service over "udms_testdb" database testing done.');
+
+        banner('starting column service over "udms_testtable" table on "udms_testdb" database test...');
+
+        $udms->udms_testdb->createTable('udms_testtable');
+
+        banner('create "udms_testcol" column...');
+        $udms->udms_testdb->udms_testtable->createColumn('udms_testcol', ['type' => 'int']);
+        if ($udms->udms_testdb->udms_testtable->existsColumn('udms_testcol') == true) {
+            banner('create "udms_testcol" column seccessfuly.', 'GREEN');
+        } else {
+            banner('create "udms_testcol" column failed', 'RED');
+            exidcode('5');
+        }
+
+        banner('getting column list...');
+        $cl = $udms->udms_testdb->udms_testtable->listColumns();
+        if (in_array('udms_testcol', $cl)) {
+            banner('getting column list seccessfuly.', 'GREEN');
+        } else {
+            banner('getting column list failed', 'RED');
+            exidcode('13');
+        }
+
+        banner('droping "udms_testcol" column...');
+        $udms->udms_testdb->udms_testtable->dropColumn('udms_testcol');
+        if ($udms->udms_testdb->udms_testtable->existsColumn('udms_testcol') == false) {
+            banner('droping "udms_testcol" column seccessfuly.', 'GREEN');
+        } else {
+            banner('droping "udms_testcol" column failed', 'RED');
+            exidcode('7');
+        }
+
+        banner('table column over "udms_testtable" table on "udms_testdb" database testing done.');
+        $udms->dropDatabase('udms_testdb');
+
+        banner('done service testing.');
+
+        banner('starting data service testing...');
+        $udms->setAppDataModel($sdm);
+        $udms->render();
+        banner('importing data');
+        include $path . 'test/src/import.php';
+        banner('importing data done');
+        $datatest = $udms->school->class->get(['relation' => true]);
+        if ($datatest[1]['t_id']['lname'] == 'karimi' and $datatest[1]['t_id']['id'] == 73500 and $datatest[1]['c_id']['c_id']['id'] == 2 and $datatest[1]['c_id']['sub_id']['id'] == 1) {
+            banner('data import test seccessfuly', 'GREEN');
+        } else {
+            banner('data import test failed', 'RED');
+            exidcode('8');
+        }
+
+        banner('update data service testing...');
+        $udms->school->teacher->update($t2,
+            [
+                'fname' => 'torabizade'
+            ]
+        );
+        $udst = $udms->school->teacher->getByUid($t2);
+        if ($udst['fname'] == 'torabizade') {
+            banner('update data service testing seccessfuly.', 'GREEN');
+        } else {
+            banner('update data service testing is failed.', 'RED');
+            exidcode('9');
+        }
+
+        banner('delete data service testing...');
+        $udms->school->teacher->delete($t2);
+        $ddst = $udms->school->teacher->getByUid($t2);
+        if (count($ddst) == 0) {
+            banner('delete data service testing seccessfuly.', 'GREEN');
+        } else {
+            banner('delete data service testing is failed.', 'RED');
+            exidcode('10');
+        }
+
+        banner('data service testing is done.');
+
+        banner('done ' . $dm . ' addon test.');
+        $end_micro = explode(' ', microtime());
+        $end_micro = $end_micro[1] . '.' . str_replace('0.', '', $end_micro[0]);
+        if ($d2t == 1) {
+            $udms->desD2TMode();
+            $udms->dropDatabase('d2tdb');
+            banner($dm . ' addon test with D2T Mode in ' . ($end_micro - $start_micro) . ' sec', 'LYELLOW');
+            banner('Full ' . $dm . ' addon test in ' . ($end_micro - $ft) . ' sec', 'LGREEN');
+            $fat = $fat + $end_micro - $ft;
+        } else {
+            $ft = $start_micro;
+            $udms->dropDatabase('school');
+            banner($dm . ' addon test in ' . ($end_micro - $start_micro) . ' sec', 'LYELLOW');
+        }
     }
-
-    banner('getting databases list...');
-    $dl = $udms->listDatabases();
-    if (in_array('udms_testdb', $dl)) {
-        banner('getting databases list seccessfuly.', 'GREEN');
-    } else {
-        banner('getting databases list failed', 'RED');
-        exidcode('11');
-    }
-
-    banner('rename "udms_testdb" database to "udms_testdb2"...');
-    $udms->renameDatabase('udms_testdb', 'udms_testdb2');
-    if ($udms->existsDatabase('udms_testdb2') == true) {
-        banner('rename "udms_testdb" database to "udms_testdb2" seccessfuly.', 'GREEN');
-    } else {
-        banner('rename "udms_testdb" database to "udms_testdb2 failed', 'RED');
-        exidcode('3');
-    }
-
-    banner('droping "udms_testdb2" database...');
-    $udms->dropDatabase('udms_testdb2');
-    if ($udms->existsDatabase('udms_testdb2') == false) {
-        banner('droping "udms_testdb2" database seccessfuly.', 'GREEN');
-    } else {
-        banner('droping "udms_testdb2" database failed', 'RED');
-        exidcode('4');
-    }
-
-    banner('database service testing done.');
-
-    banner('starting table service over "udms_testdb" database test...');
-    $udms->createDatabase('udms_testdb');
-
-    banner('create "udms_testtable" table...');
-    $udms->udms_testdb->createTable('udms_testtable');
-    if ($udms->udms_testdb->existsTable('udms_testtable') == true) {
-        banner('create "udms_testtable" table seccessfuly.', 'GREEN');
-    } else {
-        banner('create "udms_testtable" table failed', 'RED');
-        exidcode('5');
-    }
-
-    banner('getting tables list...');
-    $tl = $udms->udms_testdb->listTables();
-    if (in_array('udms_testtable', $tl)) {
-        banner('getting tables list seccessfuly.', 'GREEN');
-    } else {
-        banner('getting tables list failed', 'RED');
-        exidcode('12');
-    }
-
-    banner('rename "udms_testtable" table to "udms_testtable2"...');
-    $udms->udms_testdb->renameTable('udms_testtable', 'udms_testtable2');
-    if ($udms->udms_testdb->existsTable('udms_testtable2') == true) {
-        banner('rename "udms_testtable" table to "udms_testtable2" seccessfuly.', 'GREEN');
-    } else {
-        banner('rename "udms_testtable" table to "udms_testtable2 failed', 'RED');
-        exidcode('6');
-    }
-
-    banner('droping "udms_testtable2" table...');
-    $udms->udms_testdb->dropTable('udms_testtable2');
-    if ($udms->udms_testdb->existsTable('udms_testtable2') == false) {
-        banner('droping "udms_testtable2" table seccessfuly.', 'GREEN');
-    } else {
-        banner('droping "udms_testtable2" table failed', 'RED');
-        exidcode('7');
-    }
-
-    banner('table service over "udms_testdb" database testing done.');
-
-    banner('starting column service over "udms_testtable" table on "udms_testdb" database test...');
-    $udms->udms_testdb->createTable('udms_testtable');
-
-    banner('create "udms_testcol" column...');
-    $udms->udms_testdb->udms_testtable->createColumn('udms_testcol', ['type' => 'int']);
-    if ($udms->udms_testdb->udms_testtable->existsColumn('udms_testcol') == true) {
-        banner('create "udms_testcol" column seccessfuly.', 'GREEN');
-    } else {
-        banner('create "udms_testcol" column failed', 'RED');
-        exidcode('5');
-    }
-
-    banner('getting column list...');
-    $cl = $udms->udms_testdb->udms_testtable->listColumns();
-    if (in_array('udms_testcol', $cl)) {
-        banner('getting column list seccessfuly.', 'GREEN');
-    } else {
-        banner('getting column list failed', 'RED');
-        exidcode('13');
-    }
-
-    banner('droping "udms_testcol" column...');
-    $udms->udms_testdb->udms_testtable->dropColumn('udms_testcol');
-    if ($udms->udms_testdb->udms_testtable->existsColumn('udms_testcol') == false) {
-        banner('droping "udms_testcol" column seccessfuly.', 'GREEN');
-    } else {
-        banner('droping "udms_testcol" column failed', 'RED');
-        exidcode('7');
-    }
-
-    banner('table column over "udms_testtable" table on "udms_testdb" database testing done.');
-    $udms->dropDatabase('udms_testdb');
-
-    banner('done service testing.');
-
-    banner('starting data service testing...');
-    $udms->setAppDataModel($sdm);
-    $udms->render();
-    banner('importing data');
-    include $path . 'test/src/import.php';
-    banner('importing data done');
-    $datatest = $udms->school->class->get(['relation' => true]);
-    if ($datatest[1]['t_id']['lname'] == 'karimi' and $datatest[1]['t_id']['id'] == 73500 and $datatest[1]['c_id']['c_id']['id'] == 2 and $datatest[1]['c_id']['sub_id']['id'] == 1) {
-        banner('data import test seccessfuly', 'GREEN');
-    } else {
-        banner('data import test failed', 'RED');
-        exidcode('8');
-    }
-
-    banner('update data service testing...');
-    $udms->school->teacher->update($t2,
-        [
-            'fname' => 'torabizade'
-        ]
-    );
-    $udst = $udms->school->teacher->getByUid($t2);
-    if ($udst['fname'] == 'torabizade') {
-        banner('update data service testing seccessfuly.', 'GREEN');
-    } else {
-        banner('update data service testing is failed.', 'RED');
-        exidcode('9');
-    }
-
-    banner('delete data service testing...');
-    $udms->school->teacher->delete($t2);
-    $ddst = $udms->school->teacher->getByUid($t2);
-    if (count($ddst) == 0) {
-        banner('delete data service testing seccessfuly.', 'GREEN');
-    } else {
-        banner('delete data service testing is failed.', 'RED');
-        exidcode('10');
-    }
-    foreach ($sdmdbs as $db) {
-        $udms->dropDatabase($db);
-    }
-
-    banner('data service testing is done.');
-
-    banner('done ' . $dm . ' addon test.');
-    $end_micro = explode(' ', microtime());
-    $end_micro = $end_micro[1] . '.' . str_replace('0.', '', $end_micro[0]);
-    banner($dm . ' addon test in ' . ($end_micro - $start_micro) . ' sec', 'LYELLOW');
+    $ft = 0;
     $i++;
 }
 
-banner('done udms test.');
+Tools::rmDir($udmsCacheDir);
+banner('done udms test in ' . $fat . ' sec.', 'LGREEN');
 
 banner('----------- End -----------', 'WHITE');
 banner('exitcode: 0', 'GREEN');

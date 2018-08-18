@@ -1,8 +1,8 @@
 <?php
 namespace Olive\UDMS\Model;
 
-use Olive\UDMS\Exception\Custom as UException;
 use Olive\UDMS\Common as Common;
+use Olive\UDMS\Exception\Custom as UException;
 use Olive\UDMS\Model\Table as Table;
 class Database
 {
@@ -10,7 +10,10 @@ class Database
 
     private $dbname;
 
-    private $execute;
+    private function getName($name)
+    {
+        return $this->getCore->prefix . $name;
+    }
 
     public function availableTableRule()
     {
@@ -26,9 +29,20 @@ class Database
 
     public function listTables()
     {
-        $tl = $this->execute->listTables($this->dbname);
+        $tl = $this->getCore->execute->listTables($this->dbname);
         if (is_array($tl)) {
-            return $tl;
+            if ($this->getCore->prefix == '') {
+                return $tl;
+            } else {
+                $list = [];
+                foreach ($tl as $table) {
+                    if (preg_match('/^(' . $this->getCore->prefix . ')/', $table)) {
+                        $list[] = preg_replace('/^(' . $this->getCore->prefix . ')/', '', $table);
+                    }
+                }
+
+                return $list;
+            }
         } else {
             return [];
         }
@@ -36,101 +50,93 @@ class Database
 
     public function existsTable($name)
     {
+        $name = $this->getName($name);
         if (! \Olive\UDMS\Core::validName($name)) {
-            throw new UException($this->getUCPath(), $name . 'name is not valid!');
+            throw new UException($this->getCore->getUCPath(), $name . 'name is not valid!');
         }
 
-        return $this->execute->existsTable($this->dbname, $name);
+        return $this->getCore->execute->existsTable($this->dbname, $name);
     }
 
     public function createTable($name, $options = [])
     {
-        if (! \Olive\UDMS\Core::validName($name)) {
-            throw new UException($this->getUCPath(), $name . 'name is not valid!');
-        }
         if ($this->existsTable($name)) {
-            throw new UException($this->getUCPath(), 'your table name has exists (' . $name . ')');
+            throw new UException($this->getCore->getUCPath(), 'your table name has exists (' . $name . ')');
         }
-        $this->execute->createTable($this->dbname, $name, $options);
-        $ud = $this->getDatabaseModelData($this->dbname);
+        $name = $this->getName($name);
+        $this->getCore->execute->createTable($this->dbname, $name, $options);
+        $ud = $this->getCore->getDatabaseModelData($this->dbname);
         $ud[$name]['auto']['__udms_id'] = [
           'start' => 1,
           'add' => 1,
           'last' => 0
         ];
-        $this->updateDatabaseModelData($this->dbname, $ud);
-        $ui = $this->getDatabaseModel($this->dbname);
+        $this->getCore->updateDatabaseModelData($this->dbname, $ud);
+        $ui = $this->getCore->getDatabaseModel($this->dbname);
         if (! isset($ui[$name])) {
             $ui[$name] = $options;
-            $this->updateDatabaseModel($this->dbname, $ui);
+            $this->getCore->updateDatabaseModel($this->dbname, $ui);
         }
     }
 
     public function dropTable($name)
     {
-        if (! \Olive\UDMS\Core::validName($name)) {
-            throw new UException($this->getUCPath(), $name . 'name is not valid!');
-        }
         if (! $this->existsTable($name)) {
-            throw new UException($this->getUCPath(), 'your table name has not exists (' . $name . ')');
+            throw new UException($this->getCore->getUCPath(), 'your table name has not exists (' . $name . ')');
         }
-        $this->execute->dropTable($this->dbname, $name);
-        $ui = $this->getDatabaseModel($this->dbname);
+        $name = $this->getName($name);
+        $this->getCore->execute->dropTable($this->dbname, $name);
+        $ui = $this->getCore->getDatabaseModel($this->dbname);
         unset($ui[$name]);
-        $this->updateDatabaseModel($this->dbname, $ui);
+        $this->getCore->updateDatabaseModel($this->dbname, $ui);
 
-        $ud = $this->getDatabaseModelData($this->dbname);
+        $ud = $this->getCore->getDatabaseModelData($this->dbname);
         unset($ud[$name]);
-        $this->updateDatabaseModelData($this->dbname, $ud);
+        $this->getCore->updateDatabaseModelData($this->dbname, $ud);
     }
 
     public function cleanTable($name)
     {
-        if (! \Olive\UDMS\Core::validName($name)) {
-            throw new UException($this->getUCPath(), $name . 'name is not valid!');
-        }
         if (! $this->existsTable($name)) {
-            throw new UException($this->getUCPath(), 'your table name has not exists (' . $name . ')');
+            throw new UException($this->getCore->getUCPath(), 'your table name has not exists (' . $name . ')');
         }
-        $this->execute->cleanTable($this->dbname, $name);
+        $name = $this->getName($name);
+        $this->getCore->execute->cleanTable($this->dbname, $name);
     }
 
     public function renameTable($name, $to)
     {
-        if (! \Olive\UDMS\Core::validName($name)) {
-            throw new UException($this->getUCPath(), $name . 'name is not valid!');
-        }
-        if (! \Olive\UDMS\Core::validName($to)) {
-            throw new UException($this->getUCPath(), $to . 'name is not valid!');
-        }
         if (! $this->existsTable($name)) {
-            throw new UException($this->getUCPath(), 'your table name has not exists (' . $name . ')');
+            throw new UException($this->getCore->getUCPath(), 'your table name has not exists (' . $name . ')');
         }
+        $name = $this->getName($name);
         if ($this->existsTable($to)) {
-            throw new UException($this->getUCPath(), 'your table name has exists (' . $name . ')');
+            throw new UException($this->getCore->getUCPath(), 'your table name has exists (' . $to . ')');
         }
-        $this->execute->renameTable($this->dbname, $name, $to);
-        $ui = $this->getDatabaseModel($this->dbname);
+        $to = $this->getName($to);
+        $this->getCore->execute->renameTable($this->dbname, $name, $to);
+        $ui = $this->getCore->getDatabaseModel($this->dbname);
         $ui[$to] = $ui[$name];
         unset($ui[$name]);
-        $this->updateDatabaseModel($this->dbname, $ui);
+        $this->getCore->updateDatabaseModel($this->dbname, $ui);
 
-        $ud = $this->getDatabaseModelData($this->dbname);
+        $ud = $this->getCore->getDatabaseModelData($this->dbname);
         $ud[$to] = $ud[$name];
         unset($ud[$name]);
-        $this->updateDatabaseModelData($this->dbname, $ud);
+        $this->getCore->updateDatabaseModelData($this->dbname, $ud);
     }
 
     public function __get($name)
     {
-        if ($this->inReservedName($name)) {
-            throw new UException($this->getUCPath(), 'your table name is reserved! (' . $name . ')');
+        if ($this->inReservedName($this->getName($name))) {
+            throw new UException($this->getCore->getUCPath(), 'your table name is reserved! (' . $name . ')');
         }
         if (! $this->existsTable($name)) {
-            throw new UException($this->getUCPath(), 'your table name can not found! (' . $name . ')');
+            throw new UException($this->getCore->getUCPath(), 'your table name can not found! (' . $name . ')');
         }
+        $this->getCore->ot = $name;
 
-        return new Table($this->dbname, $name, $this->path, $this->udmsCacheDir, $this->execute, $this->reservedName);
+        return new Table($this->getCore, $this->dbname, $this->getName($name), $this->reservedName);
     }
 
     public function __toString()
@@ -138,12 +144,10 @@ class Database
         return $this->dbname;
     }
 
-    public function __construct($dbname, $path, $udmsCacheDir, $execute)
+    public function __construct($point, $dbname)
     {
-        $this->setPath($path);
-        $this->setUCPath($udmsCacheDir);
+        $this->getCore = $point;
         $this->dbname = $dbname;
-        $this->execute = $execute;
         $this->reservedName = get_class_methods($this);
     }
 }
