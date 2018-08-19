@@ -285,6 +285,9 @@ class table
             }
             $return = call_user_func_array([$this, 'orderBy'], $args);
         }
+        if (isset($options['limit']) and is_int($options['limit']) and $options['limit']>0) {
+            $return = array_slice($return, 0, $options['limit']);
+        }
 
         return $return;
     }
