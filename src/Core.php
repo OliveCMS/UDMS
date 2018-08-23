@@ -380,6 +380,16 @@ class Core
             $dl[] = $name;
             $this->setD2T($dl);
         }
+        $ui = $this->getAppModel();
+        if (! isset($ui[$name])) {
+            $ui[$name] = [];
+            $this->setAppModel($ui);
+        }
+        $ud = $this->getAppModelData();
+        if (! isset($ud[$name])) {
+            $ud[$name] = [];
+            $this->setAppModelData($ud);
+        }
     }
 
     public function dropDatabase($name)
@@ -394,6 +404,16 @@ class Core
                     $this->d2t->dropTable($dt);
                 }
                 $this->setD2T(array_diff($this->getD2T(), [$name]));
+            }
+            $ui = $this->getAppModel();
+            if (isset($ui[$name])) {
+                unset($ui[$name]);
+                $this->setAppModel($ui);
+            }
+            $ud = $this->getAppModelData();
+            if (isset($ud[$name])) {
+                unset($ud[$name]);
+                $this->setAppModelData($ud);
             }
         } else {
             throw new UException($this->getUCPath(), 'your database name has not exists (' . $name . ')', 112);
@@ -436,6 +456,19 @@ class Core
             $key = array_search($name, $dl);
             $dl[$key] = $to;
             $this->setD2T($dl);
+        }
+
+        $ui = $this->getAppModel();
+        if (isset($ui[$name])) {
+            $ui[$to] = $ui[$name];
+            unset($ui[$name]);
+            $this->setAppModel($ui);
+        }
+        $ud = $this->getAppModelData();
+        if (isset($ud[$name])) {
+            $ud[$to] = $ud[$name];
+            unset($ud[$name]);
+            $this->setAppModelData($ud);
         }
     }
 
