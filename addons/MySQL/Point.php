@@ -267,7 +267,7 @@ class Point implements Addon
                     $options = $ui[$e][$c];
                 }
                 if (in_array(strtoupper($options['type']), $this->str_type)) {
-                    $data[$col] = '\'' . $value . '\'';
+                    $data[$col] = '\'' . str_replace(['\\', '\'', '"'], ['\\\\', '\\\'', '\\"'], $value) . '\'';
                 }
             }
         }
@@ -291,7 +291,7 @@ class Point implements Addon
                     $options = $ui[$e][$c];
                 }
                 if (in_array(strtoupper($options['type']), $this->str_type)) {
-                    $data[$col] = '\'' . $value . '\'';
+                    $data[$col] = '\'' . str_replace(['\\', '\'', '"'], ['\\\\', '\\\'', '\\"'], $value) . '\'';
                 }
             }
             $do[] = "`$col` = " . $data[$col];
