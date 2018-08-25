@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.1
+
+* add limit for find method
+* fix mysql rel problem
+* fix mysql insert and update string poblem
+* update doc
+* move colorconsole to dev
+
 ## v2.0
 
 UDSM now have D2T (Database 2 Table) mode! this option is a solution for when Addon can not auto create database! with this mode, app can create auto database.
