@@ -119,10 +119,9 @@ class table
         $this->getCore->execute->createColumn($this->dbname, $this->table, $name, $options);
         $ud = $this->getCore->getDatabaseModelData($this->dbname);
         if (isset($options['auto'])) {
-            if (count($options['auto']) == 0) {
-                $start = 1;
-                $add = 1;
-            } else {
+            $start = 1;
+            $add = 1;
+            if (count($options['auto']) > 0) {
                 if (isset($options['auto']['start'])) {
                     $start = $options['auto']['start'];
                 }
@@ -284,6 +283,9 @@ class table
                 }
             }
             $return = call_user_func_array([$this, 'orderBy'], $args);
+        }
+        if (isset($options['limit']) and is_int($options['limit']) and $options['limit'] > 0) {
+            $return = array_slice($return, 0, $options['limit']);
         }
 
         return $return;

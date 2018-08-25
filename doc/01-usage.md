@@ -302,6 +302,38 @@ if($udms->school->availableColumnRule()) {
 $udms->school->student->createColumn('studnet',
   [] // config
 );
+/**
+ * config available:
+ * @param type -> [int, text]
+ * @param length -> (0==ultimate)
+ * @param index -> [primary]
+ * @param auto -> [start => int, add => int]
+ * @param __udms_rel -> [table => column]
+ */
+/*
+# example 1:
+$udms->school->classes->createColumn('id',
+  [
+    'type' => 'int',
+    'lenght' => 8,
+    'index' => 'primary',
+    'auto' => [
+      'start' => 1000000,
+      'add' => 367
+    ]
+  ]
+);
+
+# example 2:
+
+$udms->school->classes->createColumn('t_id',
+  [
+    '__udms_rel' => [
+      'teacher' => 'id'
+    ]
+  ]
+);
+ */
 ```
 
 ### Exists Column
@@ -419,7 +451,8 @@ $list_1 = $udms->school->student->get(
     'relation' => false,
     'sort' => [
       'lname' => SORT_ASC
-    ]
+    ],
+    'limit' => 5
   ]
 );
 /* output array

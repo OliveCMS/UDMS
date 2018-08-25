@@ -170,7 +170,7 @@ class Point implements Addon
             $d = $options['__udms_rel'];
             $e = key($d);
             $c = $d[$e];
-            $options = $ui[$this->getCore->ot][$c];
+            $options = $ui[$e][$c];
             $rel_detect = true;
         }
         if (isset($options['__udms_config']['mysql_' . $this->type])) {
@@ -267,7 +267,7 @@ class Point implements Addon
                     $options = $ui[$e][$c];
                 }
                 if (in_array(strtoupper($options['type']), $this->str_type)) {
-                    $data[$col] = '\'' . $value . '\'';
+                    $data[$col] = '\'' . str_replace(['\\', '\'', '"'], ['\\\\', '\\\'', '\\"'], $value) . '\'';
                 }
             }
         }
@@ -291,7 +291,7 @@ class Point implements Addon
                     $options = $ui[$e][$c];
                 }
                 if (in_array(strtoupper($options['type']), $this->str_type)) {
-                    $data[$col] = '\'' . $value . '\'';
+                    $data[$col] = '\'' . str_replace(['\\', '\'', '"'], ['\\\\', '\\\'', '\\"'], $value) . '\'';
                 }
             }
             $do[] = "`$col` = " . $data[$col];
