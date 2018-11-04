@@ -1,4 +1,4 @@
-# UDMS - Universal Data Management System [![Build Status](https://travis-ci.org/OliveCMS/UDMS.svg?branch=master)](https://travis-ci.org/OliveCMS/UDMS)
+# UDMS - Universal Data Management System [![Build Status](https://travis-ci.org/OliveCMS/UDMS.svg?branch=master)](https://travis-ci.org/OliveCMS/UDMS) [![Coverage Status](https://coveralls.io/repos/github/OliveCMS/UDMS/badge.svg)](https://coveralls.io/github/OliveCMS/UDMS)
 
 UDMS is *Data Managements System* Hub for use database regardless of Data Management type.
 
