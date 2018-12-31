@@ -56,7 +56,7 @@ if (is_dir($udmsCacheDir)) {
 }
 banner('removed all data');
 
-$udms = new udms($udmsCacheDir);
+$udms = new udms($path . 'vendor/', $udmsCacheDir);
 
 $dms = $udms->getAddonsList();
 banner('found (' . count($dms) . ') data manager');
@@ -73,8 +73,13 @@ foreach ($dms as $dm) {
     for ($d2t = 0;$d2t < 2;$d2t++) {
         $start_micro = explode(' ', microtime());
         $start_micro = $start_micro[1] . '.' . str_replace('0.', '', $start_micro[0]);
-
-        $udms->setAddon($dm, Tools::getJsonFile($udms->getPath('addons/' . $dm . '/test/tc.json')));
+        $namespace = 'Olive\\UDMS\\Addon\\' . $dm . '\\Test\\TC';
+        if(class_exists($namespace)){
+          $tcdata = $namespace::Data();
+        }else{
+          $tcdata = [];
+        }
+        $udms->setAddon($dm, $tcdata);
         if ($d2t == 1) {
             banner('starting D2T Mode database service test...', ['color' => 'magenta']);
             $udms->createDatabase('d2tdb');

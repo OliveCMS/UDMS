@@ -13,6 +13,9 @@ services:
 before_script:
   - pecl install mongodb
   - composer install
+  - composer require olive-cms/udms-json
+  - composer require olive-cms/udms-mysql
+  - composer require olive-cms/udms-mongodb
 
 script:
   - chmod +x ./test/run

@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.0.0
+
+UDMS addons now install with composer!
+
+* Json addon move to olive-cms/udms-json
+* MySQL addon move to olive-cms/udms-mysql
+* MongoDB addon move to olive-cms/udms-mongodb
+* remove mongodb/mongodb require from Core
+* update test
+
 ## v2.1.1
 
 * fix not set default error

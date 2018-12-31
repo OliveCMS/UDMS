@@ -54,11 +54,11 @@ If you do not use Composer, you can grab the code from GitHub, and use any PSR-0
 
 ``` php
 // load autoload
-require_once 'vendor/autoload.php';
+require_once '/path/to/vendor/autoload.php';
 use Olive\UDMS\Core as udms;
 
 // create a udms
-$udms = new udms('/path/to/database/dir');
+$udms = new udms('/path/to/vendor/', '/path/to/database/dir');
 ```
 
 ## Addons

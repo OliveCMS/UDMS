@@ -15,11 +15,11 @@ If you do not use Composer, you can download composered zip from [release Github
 ## Basic Usage
 
 ``` php
-require_once 'vendor/autoload.php';
+require_once '/path/to/vendor/autoload.php';
 use Olive\UDMS\Core as udms;
 
 // create a udms
-$udms = new udms('/path/to/database/dir');
+$udms = new udms('/path/to/vendor/', '/path/to/database/dir');
 
 // set udms addon
 $udms->setAddon('json');
@@ -44,6 +44,12 @@ $udms->school->student->find(
   ]
 );
 ```
+
+## Addons
+
+* olive-cms/udms-json
+* olive-cms/udms-mysql
+* olive-cms/udms-mongodb
 
 ## Documentation
 

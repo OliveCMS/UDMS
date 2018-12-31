@@ -1,8 +1,0 @@
-{
-  "type": "mongodb",
-  "host": "localhost:27017",
-  "login":{
-    "username": "user",
-    "password": "pass"
-  }
-}

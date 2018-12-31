@@ -5,8 +5,9 @@
   "keywords": ["Data", "Database", "Data manager", "UDMS", "Sql", "NoSQL", "mysql", "mongodb", "json", "datahub", "composer", "OliveCMS"],
   "require": {
     "php": ">=5.5",
-    "mongodb/mongodb": "^1.4",
-    "olive-cms/tools": "^1.0"
+    "olive-cms/tools": "^1.1",
+    "olive-cms/installed-packages": "^1.0",
+    "olive-cms/udms-json": "^1.0"
   },
   "require-dev": {
     "olive-cms/colorconsole": "^1.0"

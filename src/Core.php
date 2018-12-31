@@ -2,6 +2,7 @@
 namespace Olive\UDMS;
 
 use Olive\Tools;
+use Olive\Tools\Packages;
 use Olive\UDMS\Common as Common;
 use Olive\UDMS\Exception\Custom as UException;
 use Olive\UDMS\Model\Database as Database;
@@ -28,6 +29,8 @@ class Core
     private $cacheD2T;
 
     public $debugc = 0;
+
+    protected $addons = [];
 
     // quickly function
 
@@ -98,7 +101,7 @@ class Core
 
     public function getAddonsList()
     {
-        return Tools::getDirList($this->getPath('addons'));
+        return $this->addons;
     }
 
     public function setAddon($type, $option = [])
@@ -490,7 +493,7 @@ class Core
         }
     }
 
-    public function __construct($udmsCacheDir = null)
+    public function __construct($vendor_path, $udmsCacheDir = null)
     {
         if ($udmsCacheDir != null) {
             $ec = dirname($udmsCacheDir);
@@ -513,5 +516,15 @@ class Core
         }
         $this->resetAppModel();
         $this->reservedName = get_class_methods($this);
+
+        // get addons installed
+        $list = Packages::getPackages($vendor_path);
+        $addonname = '';
+        foreach ($list as $package) {
+            preg_match('/\/udms-([a-zA-Z0-9]+)$/', $package['name'], $addonname);
+            if (isset($addonname[1]) and $addonname[1] != '') {
+                $this->addons[] = strtoupper($addonname[1][0]) . substr($addonname[1], 1);
+            }
+        }
     }
 }
