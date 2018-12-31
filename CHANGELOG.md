@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.1
+
+* fix not set default error
+
 ## v2.1
 
 * add limit for find method
