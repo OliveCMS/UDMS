@@ -301,9 +301,21 @@ class table
         }
         $ud = $this->getCore->getDatabaseModelData($this->dbname);
         $cols = array_keys($data);
-        $uics = array_keys($ud[$this->table]['columns']);
-        $uacs = array_keys($ud[$this->table]['auto']);
-        $upcs = $ud[$this->table]['index']['primary'];
+        if (isset($ud[$this->table]['columns'])) {
+            $uics = array_keys($ud[$this->table]['columns']);
+        } else {
+            $uics = [];
+        }
+        if (isset($ud[$this->table]['auto'])) {
+            $uacs = array_keys($ud[$this->table]['auto']);
+        } else {
+            $uacs = [];
+        }
+        if (isset($ud[$this->table]['index']['primary'])) {
+            $upcs = $ud[$this->table]['index']['primary'];
+        } else {
+            $upcs = [];
+        }
         foreach ($cols as $col) {
             if ($this->existsColumn($col)) {
                 if (in_array($col, $upcs)) {
