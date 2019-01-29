@@ -62,8 +62,6 @@ $udms->school->student->find(
 ## Requirements
 
 - UDMS 2.x works with PHP 5.5+.
-- PDO mysql
-- php mongodb module
 
 # Versioning
 
